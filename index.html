@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <title>goderich</title>
+</head>
+<body>
+</body>
+<!-- scripts -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/TrackballControls.js"></script>
+<!--<script type="module" src="script.js"></script> -->
+<script type="module">
+const data = `0,0,176
+0,26.9,180.9904458
+0,141.2,181.0881941
+0,146.8,181.2697268
+0,157.2,181.3622387
+0,162.5,181.4756966
+0,169,181.9656331
+0,174.6,181.9656331
+0,180.1,182.2800798
+0,186.1,182.4581757
+0,191.2,182.4581757
+0,198.8,182.7480181
+0,207.1,182.9347873
+0,217.8,183.1617031
+0,230.8,183.4656682
+0,236.6,183.6454554
+0,246.9,183.8479959
+0,252.7,184.1448224
+0,261.2,184.1448224
+0,284.3,184.3211186
+0,294.4,184.5446115
+0,300.8,184.7752057
+0,305.2,184.8904443
+0,308.5,185.4072717
+0,323.3,185.6552091
+0,330.4,186.1027407
+0,336.8,186.3506782
+310,343.9,186.638921
+0,349.4,186.7576154
+330,356.2,186.7576154
+265,364.3,187.2816932
+230,374.3,187.3864236
+0,380.3,188.2185526
+245,392.2,188.4280773
+285,398.2,188.7427479
+0,402.7,189.3446088
+0,406.5,189.58207
+265,413.3,190.0849291
+0,427.7,190.6925505
+200,445.1,190.6925505
+315,453.2,190.8758287
+315,463.7,191.2162024
+295,483.2,191.6616686
+290,491.7,192.4690151
+290,504.9,192.9888974
+290,513.4,193.3175534
+290,518.1,193.7261264
+0,529.8,194.1835885
+0,542.9,194.4664468
+0,551,194.7632733
+0,559.5,195.1194651
+0,569.7,195.3883551
+0,577.4,195.5629057
+0,587.4,195.8229862
+0,602.3,196.1896543
+0,612.8,196.4271155
+190,619.6,196.6629505
+240,624.1,196.9981899
+285,633.7,197.4968753
+0,639.4,197.6365158
+0,647.4,197.7604468
+210,654.5,197.8616861
+295,660.3,198.0258137
+0,665,198.284543
+355,668.7,198.3561087
+0,672.8,198.6810369
+0,679,199.3990235
+0,692.7,200.3423636
+0,710.7,200.7071744
+330,731.6,201.0878108
+330,742.5,201.3251997
+330,756.1,201.6499628
+0,765.4,202.0026626
+0,775.5,202.2785367
+0,783.4,202.6382206
+0,793.7,202.8617135
+0,800.1,203.1061589
+346,807.1,203.2807096
+0,817.1,203.4692243
+0,827.9,203.675194
+0,839.7,203.930038
+0,854.3,204.6270615
+305,867.6,204.7388079
+0,870.8,205.0880156
+0,880.8,206.6537557
+0,883.1213052,207.7585994
+0,898.9213052,207.8493657
+0,904.1213052,207.8493657
+0,907.8213052,207.8493657
+0,913.8213052,207.8493657
+295,931.4213052,207.9872607
+260,939.3213052,207.8493657
+0,947.2213052,207.8493657
+0,951.2213052,207.8493657
+0,956.4213052,207.8493657
+0,962.5213052,207.8493657
+265,968.6213052,207.922677
+0,972.8213052,207.922677
+0,979.6213052,207.9750422
+0,982.6213052,207.9750422
+0,987.7213052,208.060572
+0,992.6213052,208.060572
+0,997.8213052,208.060572
+300,1015.221305,208.060572
+300,1031.721305,207.9942427
+0,1035.521305,207.9279135
+0,1039.321305,207.9279135
+230,1043.721305,207.9279135
+0,1050.321305,207.8240638
+0,1062.221305,207.7193334
+0,1068.221305,207.8345368
+0,1074.821305,207.9183147
+255,1084.421305,207.9183147
+0,1099.521305,207.9183147
+240,1115.721305,207.853731
+0,1119.421305,207.853731
+0,1134.321305,207.853731
+0,1138.021305,207.853731
+0,1149.221305,207.853731
+0,1162.221305,207.853731
+0,1173.621305,207.853731
+0,1188.221305,207.6058691
+0,1202.421305,207.6058691
+0,1214.521305,207.6058691
+0,1227.221305,207.6058691
+235,1236.921305,207.6058691
+200,1254.721305,207.2759684
+0,1273.621305,207.2759684
+315,1282.121305,207.2759684
+0,1296.021305,207.2759684
+0,1305.321305,207.4156089
+`;
+
+// global render
+const w = window.innerWidth;
+const h = window.innerHeight;
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.autoClear = false;
+renderer.setSize(w, h);
+document.body.appendChild(renderer.domElement);
+
+// global cam
+const fov = 75;
+const aspect = w / h;
+const near = 0.1;
+const far = 10000;
+const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+// set cam default
+camera.position.set(0, -250, 500); // Position camera behind and above the start point
+camera.lookAt(0, 0, 0);  // Look at the middle height of the data
+camera.up.set(0, 0, 1);    // Keep Z up
+
+// global scene
+const scene = new THREE.Scene();
+
+// do this once
+const textureLoader = new THREE.TextureLoader();
+const icogeo = new THREE.IcosahedronGeometry(1, 16);
+
+render();
+
+// global controls
+const controls = new THREE.TrackballControls(camera, renderer.domElement);
+controls.enable = true;
+controls.minDistance = 100;
+controls.maxDistance = 3000;
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.staticMoving = false;
+controls.zoomSpeed = 1.2;
+controls.rotateSpeed = 1.0;
+controls.panSpeed = 0.8;
+
+renderTools();
+renderRiver();
+
+async function renderRiver() {
+    const points = [];
+    // parse data from csv string
+    let line = "";
+    for(let i = 0; i < data.length; i++) {
+        //console.log(data[i]);
+        if(data[i] != "\n") {
+            line += data[i];
+        } else {
+            line += ","
+            points.push(await getPoint(line));
+            line = "";
+        }
+    }
+
+    //console.log(points);
+    
+    let x = [0];
+    let y = [0];
+    //let z = [points[0][2]];
+    let z = [0];
+    //console.log(x);
+    //console.log(y);
+    //console.log(z);
+
+    for(let i = 1; i < points.length; i++) {
+
+        let distance = points[i][1] - points[i-1][1];
+        let azimuthRad = (points[i][0] * Math.PI) / 180;
+
+        let dx = distance * Math.sin(azimuthRad);
+        let dy = distance * Math.cos(azimuthRad);
+       
+        //console.log(dx, dy);
+
+        x.push(x[x.length - 1] + dx);
+        y.push(y[y.length - 1] + dy);
+        z.push((points[i][2] - 176));
+    }
+
+    //console.log(x);
+    //console.log(y);
+    //console.log(z);
+
+    for(let i = 0; i < points.length; i++) {
+        renderPoint(x[i], y[i], z[i]);
+    }
+}
+
+async function getPoint(line) {
+    //console.log(line);
+    let p = [];
+    let value = "";
+    for(let i = 0; i < line.length; i++) {
+        if(line[i] != ",") {
+            value += line[i];
+        } else {
+            //console.log(value);
+            p.push(parseFloat(value));
+            value = "";
+        }
+    }
+    //console.log(p);
+    return p;
+    //renderPoint(p);
+}
+
+async function renderPoint(x, y, z) {
+    //console.log(x, y, z);
+    let geo = new THREE.IcosahedronGeometry(4, 2);
+    let mat = new THREE.MeshBasicMaterial({ 
+        color: 0x234B50,
+    });
+    const point = new THREE.Mesh(geo, mat);
+    point.position.set(x, y, z);
+    scene.add(point);
+}
+
+
+// render visual helpers
+async function renderTools() {
+    const red = new THREE.Color("rgb(255, 0, 0)");
+    const green = new THREE.Color("rgb(0, 255, 0)");
+    const blue = new THREE.Color("rgb(0, 0, 255)");
+    const axesHelper = new THREE.AxesHelper( 500 );
+    axesHelper.setColors(red, green, blue);
+    scene.add(axesHelper);
+    const size = 1000;
+    const divisions = 10;
+    const gridHelper = new THREE.GridHelper( size, divisions );
+    scene.add( gridHelper );
+}
+
+// render the rendering renderer
+function render() {
+    renderer.render(scene, camera)
+}
+
+// animate the scene lel
+function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    render();
+}
+
+animate();
+</script>
+</html>
+
