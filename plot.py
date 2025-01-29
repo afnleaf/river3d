@@ -6,16 +6,19 @@ import pandas as pd
 import sys
 
 #index,Horizontal distance (m),Hypotenuse (m),Angle (°),Azimuth (°),Calculated hypotenuse,Calculated angle (°),Distance from L. Huron (m),Elevation (masl)
-INDEX = "index"
-H_DIST = "Horizontal distance (m)"
-HYPO = "Hypotenuse (m)"
-ANGLE = "Angle (°)"
-AZIMUTH = "Azimuth (°)"
-CALC_HYPO = "Calculated hypotenuse"
-CALC_ANGLE = "Calculated angle (°)"
-DISTANCE = "Distance from L. Huron (m)"
-ELEVATION = "Elevation (masl)"
+#INDEX = "index"
+#H_DIST = "Horizontal distance (m)"
+#HYPO = "Hypotenuse (m)"
+#ANGLE = "Angle (°)"
+#AZIMUTH = "Azimuth (°)"
+#CALC_HYPO = "Calculated hypotenuse"
+#CALC_ANGLE = "Calculated angle (°)"
+#DISTANCE = "Distance from L. Huron (m)"
+#ELEVATION = "Elevation (masl)"
 
+AZIMUTH = "azimuth"
+DISTANCE = "distance"
+ELEVATION = "elevation"
 
 def parse_csv(filepath):
     try:
