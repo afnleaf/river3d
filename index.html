@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <title>goderich</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha512-NhSC1YmyruXifcj/KFRWoC561YpHpc5Jtzgvbuzx5VozKpWvQ+4nXhPdFgmx8xqexRcpAglTj9sIBWINXa8x5w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
 </body>
@@ -12,7 +13,7 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/TrackballControls.js"></script>
 <!--<script type="module" src="script.js"></script> -->
 <script type="module">
-const data = `0,0,176
+const csv = `0,0,176
 0,26.9,180.9904458
 0,141.2,181.0881941
 0,146.8,181.2697268
@@ -145,6 +146,104 @@ const data = `0,0,176
 0,1305.321305,207.4156089
 `;
 
+// parse data from csv string
+function parseCSV() {
+    const ds = [];let l = "";
+    for(let i = 0; i < csv.length; i++) {
+        if(csv[i] != "\n") {
+            l += csv[i];
+        } else {
+            l += ",";
+            ds.push(parseLine(l));
+            l = "";
+        }
+    }
+    return ds;
+}
+
+// parse line for values
+function parseLine(l) {
+    let d = [];let v = "";
+    for(let i = 0; i < l.length; i++) {
+        if(l[i] != ",") {
+            v += l[i];
+        } else {
+            d.push(parseFloat(v));
+            v = "";
+        }
+    }
+    return d;
+}
+
+function calculatePoints(data) {
+    let points = [];
+    let x = [0];
+    let y = [0];
+    let z = [0];
+
+    for(let i = 1; i < data.length; i++) {
+        let distance = data[i][1] - data[i-1][1];
+        let azimuthRad = (data[i][0] * Math.PI) / 180;
+
+        let dx = distance * Math.sin(azimuthRad);
+        let dy = distance * Math.cos(azimuthRad);
+
+        x.push(x[x.length - 1] + dx);
+        y.push(y[y.length - 1] + dy);
+        z.push((data[i][2] - 176));
+    }
+
+    for(let i = 0; i < data.length; i++) {
+        points.push([x[i],y[i],z[i]]);
+    }
+
+    return points;
+}
+
+async function renderRiver() {
+    let data = parseCSV();
+    let points = calculatePoints(data);
+    renderLine(points);
+    for(let i = 0; i < points.length; i++) {
+        renderPoint(points[i][0],points[i][1],points[i][2]);
+    }
+}
+
+function renderLine(points) {
+    let mat = new THREE.LineBasicMaterial({color: 0x164fde,});
+    const ps = [];
+    for(let i = 0; i < points.length; i++) {
+        ps.push(new THREE.Vector3(points[i][0], points[i][1], points[i][2]));
+    }
+    const geo = new THREE.BufferGeometry().setFromPoints(ps);
+    const line = new THREE.Line(geo, mat);
+    scene.add(line);
+}
+
+// render visual helpers
+async function renderTools() {
+    const size = 1000;
+    const divisions = 10;
+    const gridHelper = new THREE.GridHelper( size, divisions );
+    scene.add( gridHelper );
+    const red = new THREE.Color("rgb(255, 0, 0)");
+    const green = new THREE.Color("rgb(0, 255, 0)");
+    const blue = new THREE.Color("rgb(0, 0, 255)");
+    const axesHelper = new THREE.AxesHelper( 500 );
+    axesHelper.setColors(red, green, blue);
+    scene.add(axesHelper);
+}
+
+
+async function renderPoint(x, y, z) {
+    //console.log(x, y, z);
+    let geo = new THREE.IcosahedronGeometry(4, 2);
+    let mat = new THREE.MeshBasicMaterial({ color: 0x164fde, });
+    const point = new THREE.Mesh(geo, mat);
+    point.position.set(x, y, z);
+    scene.add(point);
+}
+
 // global render
 const w = window.innerWidth;
 const h = window.innerHeight;
@@ -160,7 +259,7 @@ const near = 0.1;
 const far = 10000;
 const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 // set cam default
-camera.position.set(0, -250, 500); // Position camera behind and above the start point
+camera.position.set(50, -200, 75); // Position camera behind and above the start point
 camera.lookAt(0, 0, 0);  // Look at the middle height of the data
 camera.up.set(0, 0, 1);    // Keep Z up
 
@@ -176,7 +275,7 @@ render();
 // global controls
 const controls = new THREE.TrackballControls(camera, renderer.domElement);
 controls.enable = true;
-controls.minDistance = 100;
+controls.minDistance = 5;
 controls.maxDistance = 3000;
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
@@ -187,99 +286,6 @@ controls.panSpeed = 0.8;
 
 renderTools();
 renderRiver();
-
-async function renderRiver() {
-    const points = [];
-    // parse data from csv string
-    let line = "";
-    for(let i = 0; i < data.length; i++) {
-        //console.log(data[i]);
-        if(data[i] != "\n") {
-            line += data[i];
-        } else {
-            line += ","
-            points.push(await getPoint(line));
-            line = "";
-        }
-    }
-
-    //console.log(points);
-    
-    let x = [0];
-    let y = [0];
-    //let z = [points[0][2]];
-    let z = [0];
-    //console.log(x);
-    //console.log(y);
-    //console.log(z);
-
-    for(let i = 1; i < points.length; i++) {
-
-        let distance = points[i][1] - points[i-1][1];
-        let azimuthRad = (points[i][0] * Math.PI) / 180;
-
-        let dx = distance * Math.sin(azimuthRad);
-        let dy = distance * Math.cos(azimuthRad);
-       
-        //console.log(dx, dy);
-
-        x.push(x[x.length - 1] + dx);
-        y.push(y[y.length - 1] + dy);
-        z.push((points[i][2] - 176));
-    }
-
-    //console.log(x);
-    //console.log(y);
-    //console.log(z);
-
-    for(let i = 0; i < points.length; i++) {
-        renderPoint(x[i], y[i], z[i]);
-    }
-}
-
-async function getPoint(line) {
-    //console.log(line);
-    let p = [];
-    let value = "";
-    for(let i = 0; i < line.length; i++) {
-        if(line[i] != ",") {
-            value += line[i];
-        } else {
-            //console.log(value);
-            p.push(parseFloat(value));
-            value = "";
-        }
-    }
-    //console.log(p);
-    return p;
-    //renderPoint(p);
-}
-
-async function renderPoint(x, y, z) {
-    //console.log(x, y, z);
-    let geo = new THREE.IcosahedronGeometry(4, 2);
-    let mat = new THREE.MeshBasicMaterial({ 
-        color: 0x234B50,
-    });
-    const point = new THREE.Mesh(geo, mat);
-    point.position.set(x, y, z);
-    scene.add(point);
-}
-
-
-// render visual helpers
-async function renderTools() {
-    const red = new THREE.Color("rgb(255, 0, 0)");
-    const green = new THREE.Color("rgb(0, 255, 0)");
-    const blue = new THREE.Color("rgb(0, 0, 255)");
-    const axesHelper = new THREE.AxesHelper( 500 );
-    axesHelper.setColors(red, green, blue);
-    scene.add(axesHelper);
-    const size = 1000;
-    const divisions = 10;
-    const gridHelper = new THREE.GridHelper( size, divisions );
-    scene.add( gridHelper );
-}
 
 // render the rendering renderer
 function render() {
