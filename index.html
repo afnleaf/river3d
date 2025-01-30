@@ -175,98 +175,62 @@ function parseLine(l) {
     return d;
 }
 
-function calculateVectorsAndPoints(data) {
-    let vectors = [];
-    let points = [];
+// calculate 3d position with azimuth
+function calcXYZ(data) {
+    let xyz = [];
     let x = [0];
     let y = [0];
-    let z = [0];
-
+    // loop from 2nd in list
     for(let i = 1; i < data.length; i++) {
+        // distance between points
         let distance = data[i][1] - data[i-1][1];
         let azimuthRad = (data[i][0] * Math.PI) / 180;
-
+        // simple geometry
         let dx = distance * Math.sin(azimuthRad);
         let dy = distance * Math.cos(azimuthRad);
-
+        // need to keep track
         x.push(x[x.length - 1] + dx);
         y.push(y[y.length - 1] + dy);
-        z.push((data[i][2] - 176));
+        // first point normalizes to 0
+        xyz.push([x[i],y[i],data[i][2] - 176]);
     }
+    return xyz;
+}
 
-    for(let i = 0; i < data.length; i++) {
-        const vector = new THREE.Vector3(x[i], y[i], z[i]); 
-        vectors.push(vector);
-
+function renderPoints(xyz) {
+    let points = [];
+    for(let i = 0; i < xyz.length; i++) {
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute('position', 
-            new THREE.Float32BufferAttribute([vector.x, vector.y, vector.z], 3));
+            new THREE.Float32BufferAttribute([xyz[i][0], xyz[i][1], xyz[i][2]], 3));
         
         const material = new THREE.PointsMaterial({ 
-            color: 0xffffff,
+            color: 0x8da9f0,
             size: 10, 
         });
         
         const point = new THREE.Points(geometry, material);
         points.push(point);
+        scene.add(point);
     }
-
-    return { vectors, points };
-}
-
-function calculatePoints(data) {
-    let points = [];
-    let x = [0];
-    let y = [0];
-    let z = [0];
-
-    for(let i = 1; i < data.length; i++) {
-        let distance = data[i][1] - data[i-1][1];
-        let azimuthRad = (data[i][0] * Math.PI) / 180;
-
-        let dx = distance * Math.sin(azimuthRad);
-        let dy = distance * Math.cos(azimuthRad);
-
-        x.push(x[x.length - 1] + dx);
-        y.push(y[y.length - 1] + dy);
-        z.push((data[i][2] - 176));
-    }
-
-    for(let i = 0; i < data.length; i++) {
-        points.push([x[i],y[i],z[i]]);
-    }
-
     return points;
 }
 
-async function renderRiver() {
-    let data = parseCSV();
-    let { vectors, points } = calculateVectorsAndPoints(data);
-    renderLine(vectors);
-    renderPoints(points);
-    /*
-    for(let i = 0; i < points.length; i++) {
-        renderPoint(points[i][0],points[i][1],points[i][2]);
-    }
-    */
-    // Start the animation
-    animateFlow(points);
-}
-
-// Example of animating colors to show flow:
+// flow animation, flow rate
 function animateFlow(points) {
-    let currentPoint = points.length - 1;  // Start from last point
+    // start from the top
+    let currentPoint = points.length - 1;
     
     function updateColors() {
         // Reset previous point
         if(currentPoint < points.length - 1) {
-            points[currentPoint + 1].material.color.setHex(0xff0000);
+            points[currentPoint + 1].material.color.setHex(0x8da9f0);
         } else {
-            points[0].material.color.setHex(0xff0000);
+            points[0].material.color.setHex(0x8da9f0);
         }
         
         // Highlight current point
-        points[currentPoint].material.color.setHex(0x00ff00);
+        points[currentPoint].material.color.setHex(0x164fde);
         
         // Move to previous point
         currentPoint = (currentPoint - 1 + points.length) % points.length;
@@ -276,27 +240,6 @@ function animateFlow(points) {
     setInterval(updateColors, 100);
 }
 
-function renderLine(vectors) {
-    let mat = new THREE.LineBasicMaterial({color: 0x164fde,});
-    const geo = new THREE.BufferGeometry().setFromPoints(vectors);
-    const line = new THREE.Line(geo, mat);
-    scene.add(line);
-}
-
-function renderPoints(points) {
-    for(let i = 0; i < points.length; i++) {
-        scene.add(points[i]);
-    }
-}
-
-async function renderIco(x, y, z) {
-    //console.log(x, y, z);
-    let geo = new THREE.IcosahedronGeometry(4, 2);
-    let mat = new THREE.MeshBasicMaterial({ color: 0x164fde, });
-    const point = new THREE.Mesh(geo, mat);
-    point.position.set(x, y, z);
-    scene.add(point);
-}
 
 // render visual helpers
 async function renderTools() {
@@ -310,6 +253,14 @@ async function renderTools() {
     const axesHelper = new THREE.AxesHelper( 500 );
     axesHelper.setColors(red, green, blue);
     scene.add(axesHelper);
+}
+
+// render the river and animate it
+function renderRiver() {
+    let data = parseCSV();
+    let xyz = calcXYZ(data);
+    let points = renderPoints(xyz);
+    animateFlow(points);
 }
 
 
