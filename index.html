@@ -197,16 +197,115 @@ function calcXYZ(data) {
     return xyz;
 }
 
+function calcVectors(xyz) {
+    //return xyz.map(p => new THREE.Vector3(p[0], p[1], p[2]));
+    let vectors = [];
+    for(let i = 0; i < xyz.length; i++) {
+        vectors.push(new THREE.Vector3(xyz[i][0], xyz[i][1], xyz[i][2]));
+    }
+    return vectors;
+}
+
+function calcCurve(vectors) {
+    return new THREE.CatmullRomCurve3(vectors);
+}
+
+function getEvenlySpacedPoints(vectors, n) {
+    let totalDistance = 0;
+    const distances = [0];
+
+    for(let i = 1; i < vectors.length; i++) {
+        totalDistance += vectors[i].distanceTo(vectors[i-1]);
+        distances.push(totalDistance);
+    }
+
+    const spacing = totalDistance / (n - 1);
+
+    const points = [];
+    let currentDistance = 0;
+    let currentSegment = 0;
+
+    for(let i = 0; i < n; i++) {
+        while(currentSegment < distances.length - 1 &&
+                distances[currentSegment + 1] < currentDistance) {
+            currentSegment++;
+        }
+
+        if(currentSegment >= vectors.length - 1) {
+            points.push(vectors[vectors.length - 1].clone());
+            currentDistance += spacing;
+            continue;
+        }
+
+        // Calculate interpolation factor within segment
+        const segmentStart = distances[currentSegment];
+        const segmentEnd = distances[currentSegment + 1];
+        const segmentLength = segmentEnd - segmentStart;
+        const alpha = (currentDistance - segmentStart) / segmentLength;
+        
+        // Interpolate between points
+        const p1 = vectors[currentSegment];
+        const p2 = vectors[currentSegment + 1];
+        const newPoint = new THREE.Vector3();
+        newPoint.lerpVectors(p1, p2, alpha);
+        points.push(newPoint);
+        
+        currentDistance += spacing;
+    }
+    return points;
+}
+
+function calcEvenlySpacedPoints(curve, n) {
+    const points = [];
+    const length = curve.getLength();
+    const segmentLength = length / (n - 1);
+    for(let i = 0; i < n; i++) {
+        const point = curve.getPointAt(curve.getUtoTmapping(i * segmentLength / length));
+        points.push(point);
+    }
+    return points;
+}
+
+function renderEvenlySpacedPoints(vectors, n = 100) {
+    // three.js func?
+    //const points = calcEvenlySpacedPoints(curve, n);
+    const points = getEvenlySpacedPoints(vectors, n);
+    let retpoints = [];
+    for(let i = 0; i < points.length; i++) {
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', 
+            new THREE.Float32BufferAttribute([
+                points[i].x,
+                points[i].y,
+                points[i].z
+            ], 3));
+        
+        const material = new THREE.PointsMaterial({ 
+            color: 0x8da9f0,
+            size: 6, 
+        });
+        
+        const point = new THREE.Points(geometry, material);
+        retpoints.push(point);
+        scene.add(point);
+    }
+    return retpoints;
+}
+
 function renderPoints(xyz) {
     let points = [];
     for(let i = 0; i < xyz.length; i++) {
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute('position', 
-            new THREE.Float32BufferAttribute([xyz[i][0], xyz[i][1], xyz[i][2]], 3));
+            new THREE.Float32BufferAttribute([
+                xyz[i][0],
+                xyz[i][1],
+                xyz[i][2]
+            ], 3));
         
         const material = new THREE.PointsMaterial({ 
             color: 0x8da9f0,
-            size: 10, 
+            size: 6, 
         });
         
         const point = new THREE.Points(geometry, material);
@@ -217,29 +316,51 @@ function renderPoints(xyz) {
 }
 
 // flow animation, flow rate
-function animateFlow(points) {
-    // start from the top
-    let currentPoint = points.length - 1;
+function animateFlow2(points) {
+    let p = points.length - 4;
     
-    function updateColors() {
-        // Reset previous point
-        if(currentPoint < points.length - 1) {
-            points[currentPoint + 1].material.color.setHex(0x8da9f0);
-        } else {
-            points[0].material.color.setHex(0x8da9f0);
-        }
+    const getLoopedIndex = (index) => {
+        return ((index % points.length) + points.length) % points.length;
+    };
+    
+    const updateColors = () => {
+        const i1 = getLoopedIndex(p-4);
+        const i2 = getLoopedIndex(p-3);
+        const i3 = getLoopedIndex(p-2);
+        const i4 = getLoopedIndex(p-1);
+        const i5 = getLoopedIndex(p); // middle
+        const i6 = getLoopedIndex(p+1);
+        const i7 = getLoopedIndex(p+2);
+        const i8 = getLoopedIndex(p+3);
+        const i9 = getLoopedIndex(p+4);
         
-        // Highlight current point
-        points[currentPoint].material.color.setHex(0x164fde);
+        points[i1].material.color.setHex(0x8da9f0);
+        points[i2].material.color.setHex(0x5983f0);
+        points[i3].material.color.setHex(0x3566e6);
+        points[i4].material.color.setHex(0x164fde);
+        points[i5].material.color.setHex(0x164fde);
+        points[i6].material.color.setHex(0x164fde);
+        points[i7].material.color.setHex(0x3566e6);
+        points[i8].material.color.setHex(0x5983f0);
+        points[i9].material.color.setHex(0x8da9f0);
         
-        // Move to previous point
-        currentPoint = (currentPoint - 1 + points.length) % points.length;
+        p = getLoopedIndex(p - 1);
     }
-
-    // Update every 100ms
-    setInterval(updateColors, 100);
+    
+    setInterval(updateColors, 50);
 }
 
+// render the river and animate it
+function renderRiver() {
+    let data = parseCSV();
+    let xyz = calcXYZ(data);
+    let vectors = calcVectors(xyz);
+    //let curve = calcCurve(vectors);
+    let points = renderEvenlySpacedPoints(vectors, 500);
+    //let points = renderPoints(xyz);
+    //animateFlow(points);
+    animateFlow2(points);
+}
 
 // render visual helpers
 async function renderTools() {
@@ -254,15 +375,6 @@ async function renderTools() {
     axesHelper.setColors(red, green, blue);
     scene.add(axesHelper);
 }
-
-// render the river and animate it
-function renderRiver() {
-    let data = parseCSV();
-    let xyz = calcXYZ(data);
-    let points = renderPoints(xyz);
-    animateFlow(points);
-}
-
 
 
 // global render
