@@ -52,3 +52,66 @@ async function renderIco(x, y, z) {
     point.position.set(x, y, z);
     scene.add(point);
 }
+function calcCurve(vectors) {
+    return new THREE.CatmullRomCurve3(vectors);
+}
+function calcEvenlySpacedPoints(curve, n) {
+    const points = [];
+    const length = curve.getLength();
+    const segmentLength = length / (n - 1);
+    for(let i = 0; i < n; i++) {
+        const point = curve.getPointAt(curve.getUtoTmapping(i * segmentLength / length));
+        points.push(point);
+    }
+    return points;
+}
+// flow animation, flow rate
+function animateFlow2(points) {
+    let p = points.length - 4;
+    
+    const getLoopedIndex = (index) => {
+        return ((index % points.length) + points.length) % points.length;
+    };
+    
+    const updateColors = () => {
+        const i1 = getLoopedIndex(p-8);
+        const i2 = getLoopedIndex(p-7);
+        const i3 = getLoopedIndex(p-6);
+        const i4 = getLoopedIndex(p-5);
+        const i5 = getLoopedIndex(p-4);
+        const i6 = getLoopedIndex(p-3);
+        const i7 = getLoopedIndex(p-2);
+        const i8 = getLoopedIndex(p-1);
+        const mid = getLoopedIndex(p); // middle
+        const i9 = getLoopedIndex(p+1);
+        const i10 = getLoopedIndex(p+2);
+        const i11 = getLoopedIndex(p+3);
+        const i12 = getLoopedIndex(p+4);
+        const i13 = getLoopedIndex(p+5);
+        const i14 = getLoopedIndex(p+6);
+        const i15 = getLoopedIndex(p+7);
+        const i16 = getLoopedIndex(p+8);
+        
+        points[i1].material.color.setHex(0x8da9f0);
+        points[i2].material.color.setHex(0x5983f0);
+        points[i3].material.color.setHex(0x5983f0);
+        points[i4].material.color.setHex(0x3566e6);
+        points[i5].material.color.setHex(0x3566e6);
+        points[i6].material.color.setHex(0x164fde);
+        points[i7].material.color.setHex(0x164fde);
+        points[i8].material.color.setHex(0x164fde);
+        points[mid].material.color.setHex(0x164fde); // middle
+        points[i9].material.color.setHex(0x164fde);
+        points[i10].material.color.setHex(0x164fde);
+        points[i11].material.color.setHex(0x164fde);
+        points[i12].material.color.setHex(0x3566e6);
+        points[i13].material.color.setHex(0x3566e6);
+        points[i14].material.color.setHex(0x5983f0);
+        points[i15].material.color.setHex(0x5983f0);
+        points[i16].material.color.setHex(0x8da9f0);
+        
+        p = getLoopedIndex(p - 1);
+    }
+    
+    setInterval(updateColors, 15);
+}

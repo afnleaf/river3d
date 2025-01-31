@@ -192,7 +192,7 @@ function calcXYZ(data) {
         x.push(x[x.length - 1] + dx);
         y.push(y[y.length - 1] + dy);
         // first point normalizes to 0
-        xyz.push([x[i],y[i],data[i][2] - 176]);
+        xyz.push([x[i],y[i],(data[i][2] - 176)]);
     }
     return xyz;
 }
@@ -204,10 +204,6 @@ function calcVectors(xyz) {
         vectors.push(new THREE.Vector3(xyz[i][0], xyz[i][1], xyz[i][2]));
     }
     return vectors;
-}
-
-function calcCurve(vectors) {
-    return new THREE.CatmullRomCurve3(vectors);
 }
 
 function getEvenlySpacedPoints(vectors, n) {
@@ -222,53 +218,40 @@ function getEvenlySpacedPoints(vectors, n) {
     const spacing = totalDistance / (n - 1);
 
     const points = [];
-    let currentDistance = 0;
-    let currentSegment = 0;
+    let currDist = 0;
+    let currSeg = 0;
 
     for(let i = 0; i < n; i++) {
-        while(currentSegment < distances.length - 1 &&
-                distances[currentSegment + 1] < currentDistance) {
-            currentSegment++;
+        while(currSeg < distances.length - 1 &&
+                distances[currSeg + 1] < currDist) {
+            currSeg++;
         }
 
-        if(currentSegment >= vectors.length - 1) {
+        if(currSeg >= vectors.length - 1) {
             points.push(vectors[vectors.length - 1].clone());
-            currentDistance += spacing;
+            currDist += spacing;
             continue;
         }
 
-        // Calculate interpolation factor within segment
-        const segmentStart = distances[currentSegment];
-        const segmentEnd = distances[currentSegment + 1];
+        // calculate interpolation factor within segment
+        const segmentStart = distances[currSeg];
+        const segmentEnd = distances[currSeg + 1];
         const segmentLength = segmentEnd - segmentStart;
-        const alpha = (currentDistance - segmentStart) / segmentLength;
+        const alpha = (currDist - segmentStart) / segmentLength;
         
-        // Interpolate between points
-        const p1 = vectors[currentSegment];
-        const p2 = vectors[currentSegment + 1];
+        // interpolate between points
+        const p1 = vectors[currSeg];
+        const p2 = vectors[currSeg + 1];
         const newPoint = new THREE.Vector3();
         newPoint.lerpVectors(p1, p2, alpha);
         points.push(newPoint);
         
-        currentDistance += spacing;
-    }
-    return points;
-}
-
-function calcEvenlySpacedPoints(curve, n) {
-    const points = [];
-    const length = curve.getLength();
-    const segmentLength = length / (n - 1);
-    for(let i = 0; i < n; i++) {
-        const point = curve.getPointAt(curve.getUtoTmapping(i * segmentLength / length));
-        points.push(point);
+        currDist += spacing;
     }
     return points;
 }
 
 function renderEvenlySpacedPoints(vectors, n = 100) {
-    // three.js func?
-    //const points = calcEvenlySpacedPoints(curve, n);
     const points = getEvenlySpacedPoints(vectors, n);
     let retpoints = [];
     for(let i = 0; i < points.length; i++) {
@@ -282,7 +265,7 @@ function renderEvenlySpacedPoints(vectors, n = 100) {
         
         const material = new THREE.PointsMaterial({ 
             color: 0x8da9f0,
-            size: 6, 
+            size: 2, 
         });
         
         const point = new THREE.Points(geometry, material);
@@ -315,39 +298,95 @@ function renderPoints(xyz) {
     return points;
 }
 
-// flow animation, flow rate
-function animateFlow2(points) {
-    let p = points.length - 4;
-    
+const colors = [
+    0x8da9f0, // lighter blue
+    0x5983f0,
+    0x5983f0,
+    0x5983f0,
+    0x5983f0,
+    0x3566e6,
+    0x3566e6,
+    0x3566e6,
+    0x3566e6,
+    0x164fde,
+    0x164fde,
+    0x164fde,
+    0x164fde, // middle
+    0x164fde,
+    0x164fde,
+    0x164fde,
+    0x3566e6,
+    0x3566e6,
+    0x3566e6,
+    0x3566e6,
+    0x5983f0,
+    0x5983f0,
+    0x5983f0,
+    0x5983f0,
+    0x8da9f0  // lighter blue
+];
+
+const sizes = [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    3,
+    3,
+    3,
+    3,
+    4,
+    4,
+    4,
+    4,
+    4,
+    3,
+    3,
+    3,
+    3,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+]
+
+// more like flowing water
+function animateMultiFlow(points, n = 4) {
+    // list to keep track of each segment
+    const flowSegments = Array.from({ length: n }, (_, i) => ({
+        pos: Math.floor((points.length / n) * i),
+        offset: 0
+    }));
+    // to get index by looping from front to back
     const getLoopedIndex = (index) => {
         return ((index % points.length) + points.length) % points.length;
     };
     
-    const updateColors = () => {
-        const i1 = getLoopedIndex(p-4);
-        const i2 = getLoopedIndex(p-3);
-        const i3 = getLoopedIndex(p-2);
-        const i4 = getLoopedIndex(p-1);
-        const i5 = getLoopedIndex(p); // middle
-        const i6 = getLoopedIndex(p+1);
-        const i7 = getLoopedIndex(p+2);
-        const i8 = getLoopedIndex(p+3);
-        const i9 = getLoopedIndex(p+4);
-        
-        points[i1].material.color.setHex(0x8da9f0);
-        points[i2].material.color.setHex(0x5983f0);
-        points[i3].material.color.setHex(0x3566e6);
-        points[i4].material.color.setHex(0x164fde);
-        points[i5].material.color.setHex(0x164fde);
-        points[i6].material.color.setHex(0x164fde);
-        points[i7].material.color.setHex(0x3566e6);
-        points[i8].material.color.setHex(0x5983f0);
-        points[i9].material.color.setHex(0x8da9f0);
-        
-        p = getLoopedIndex(p - 1);
-    }
+    const updateSegmentColors = (segment) => {
+        // get positional indices for the current flow segment
+        const indices = Array.from({length: colors.length}, (_, i) => {
+            return getLoopedIndex(segment.pos + (i - 8));
+        });
+        // update point based on color
+        indices.forEach((index, i) => {
+            points[index].material.color.setHex(colors[i]);
+            points[index].material.size = sizes[i];
+        });
+        segment.pos = getLoopedIndex(segment.pos - 1);
+    };
     
-    setInterval(updateColors, 50);
+    // update all flow segments
+    const animate = () => {
+        flowSegments.forEach(segment => {
+            updateSegmentColors(segment);
+        });
+    };
+    
+    return setInterval(animate, 38);
 }
 
 // render the river and animate it
@@ -355,11 +394,8 @@ function renderRiver() {
     let data = parseCSV();
     let xyz = calcXYZ(data);
     let vectors = calcVectors(xyz);
-    //let curve = calcCurve(vectors);
-    let points = renderEvenlySpacedPoints(vectors, 500);
-    //let points = renderPoints(xyz);
-    //animateFlow(points);
-    animateFlow2(points);
+    let points = renderEvenlySpacedPoints(vectors, 800);
+    const animationInterval = animateMultiFlow(points, 24);
 }
 
 // render visual helpers
@@ -376,7 +412,6 @@ async function renderTools() {
     scene.add(axesHelper);
 }
 
-
 // global render
 const w = window.innerWidth;
 const h = window.innerHeight;
@@ -392,9 +427,9 @@ const near = 0.1;
 const far = 10000;
 const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 // set cam default
-camera.position.set(50, -200, 75); // Position camera behind and above the start point
-camera.lookAt(0, 0, 0);  // Look at the middle height of the data
-camera.up.set(0, 0, 1);    // Keep Z up
+camera.position.set(50, -200, 75);
+camera.lookAt(0, 0, 0);
+camera.up.set(0, 0, 1);
 
 // global scene
 const scene = new THREE.Scene();
@@ -432,7 +467,18 @@ function animate() {
     render();
 }
 
+window.addEventListener("resize", () => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    controls.update();
+    renderer.setSize(w, h);
+    render();
+});
+
 animate();
+
 </script>
 </html>
 
