@@ -275,6 +275,7 @@ function renderEvenlySpacedPoints(vectors, n = 100) {
     return retpoints;
 }
 
+// unused
 function renderPoints(xyz) {
     let points = [];
     for(let i = 0; i < xyz.length; i++) {
@@ -287,8 +288,8 @@ function renderPoints(xyz) {
             ], 3));
         
         const material = new THREE.PointsMaterial({ 
-            color: 0x8da9f0,
-            size: 6, 
+            color: 0xaaaaaa,
+            size: 8, 
         });
         
         const point = new THREE.Points(geometry, material);
@@ -389,12 +390,15 @@ function animateMultiFlow(points, n = 4) {
     return setInterval(animate, 38);
 }
 
+
 // render the river and animate it
 function renderRiver() {
     let data = parseCSV();
     let xyz = calcXYZ(data);
     let vectors = calcVectors(xyz);
     let points = renderEvenlySpacedPoints(vectors, 800);
+    //let terrain = renderTerrain(points);
+    //renderPoints(xyz);
     const animationInterval = animateMultiFlow(points, 24);
 }
 

@@ -1,0 +1,471 @@
+
+const csv = `0,0,176
+0,26.9,180.9904458
+0,141.2,181.0881941
+0,146.8,181.2697268
+0,157.2,181.3622387
+0,162.5,181.4756966
+0,169,181.9656331
+0,174.6,181.9656331
+0,180.1,182.2800798
+0,186.1,182.4581757
+0,191.2,182.4581757
+0,198.8,182.7480181
+0,207.1,182.9347873
+0,217.8,183.1617031
+0,230.8,183.4656682
+0,236.6,183.6454554
+0,246.9,183.8479959
+0,252.7,184.1448224
+0,261.2,184.1448224
+0,284.3,184.3211186
+0,294.4,184.5446115
+0,300.8,184.7752057
+0,305.2,184.8904443
+0,308.5,185.4072717
+0,323.3,185.6552091
+0,330.4,186.1027407
+0,336.8,186.3506782
+310,343.9,186.638921
+0,349.4,186.7576154
+330,356.2,186.7576154
+265,364.3,187.2816932
+230,374.3,187.3864236
+0,380.3,188.2185526
+245,392.2,188.4280773
+285,398.2,188.7427479
+0,402.7,189.3446088
+0,406.5,189.58207
+265,413.3,190.0849291
+0,427.7,190.6925505
+200,445.1,190.6925505
+315,453.2,190.8758287
+315,463.7,191.2162024
+295,483.2,191.6616686
+290,491.7,192.4690151
+290,504.9,192.9888974
+290,513.4,193.3175534
+290,518.1,193.7261264
+0,529.8,194.1835885
+0,542.9,194.4664468
+0,551,194.7632733
+0,559.5,195.1194651
+0,569.7,195.3883551
+0,577.4,195.5629057
+0,587.4,195.8229862
+0,602.3,196.1896543
+0,612.8,196.4271155
+190,619.6,196.6629505
+240,624.1,196.9981899
+285,633.7,197.4968753
+0,639.4,197.6365158
+0,647.4,197.7604468
+210,654.5,197.8616861
+295,660.3,198.0258137
+0,665,198.284543
+355,668.7,198.3561087
+0,672.8,198.6810369
+0,679,199.3990235
+0,692.7,200.3423636
+0,710.7,200.7071744
+330,731.6,201.0878108
+330,742.5,201.3251997
+330,756.1,201.6499628
+0,765.4,202.0026626
+0,775.5,202.2785367
+0,783.4,202.6382206
+0,793.7,202.8617135
+0,800.1,203.1061589
+346,807.1,203.2807096
+0,817.1,203.4692243
+0,827.9,203.675194
+0,839.7,203.930038
+0,854.3,204.6270615
+305,867.6,204.7388079
+0,870.8,205.0880156
+0,880.8,206.6537557
+0,883.1213052,207.7585994
+0,898.9213052,207.8493657
+0,904.1213052,207.8493657
+0,907.8213052,207.8493657
+0,913.8213052,207.8493657
+295,931.4213052,207.9872607
+260,939.3213052,207.8493657
+0,947.2213052,207.8493657
+0,951.2213052,207.8493657
+0,956.4213052,207.8493657
+0,962.5213052,207.8493657
+265,968.6213052,207.922677
+0,972.8213052,207.922677
+0,979.6213052,207.9750422
+0,982.6213052,207.9750422
+0,987.7213052,208.060572
+0,992.6213052,208.060572
+0,997.8213052,208.060572
+300,1015.221305,208.060572
+300,1031.721305,207.9942427
+0,1035.521305,207.9279135
+0,1039.321305,207.9279135
+230,1043.721305,207.9279135
+0,1050.321305,207.8240638
+0,1062.221305,207.7193334
+0,1068.221305,207.8345368
+0,1074.821305,207.9183147
+255,1084.421305,207.9183147
+0,1099.521305,207.9183147
+240,1115.721305,207.853731
+0,1119.421305,207.853731
+0,1134.321305,207.853731
+0,1138.021305,207.853731
+0,1149.221305,207.853731
+0,1162.221305,207.853731
+0,1173.621305,207.853731
+0,1188.221305,207.6058691
+0,1202.421305,207.6058691
+0,1214.521305,207.6058691
+0,1227.221305,207.6058691
+235,1236.921305,207.6058691
+200,1254.721305,207.2759684
+0,1273.621305,207.2759684
+315,1282.121305,207.2759684
+0,1296.021305,207.2759684
+0,1305.321305,207.4156089
+`;
+
+// parse data from csv string
+function parseCSV() {
+    const ds = [];let l = "";
+    for(let i = 0; i < csv.length; i++) {
+        if(csv[i] != "\n") {
+            l += csv[i];
+        } else {
+            l += ",";
+            ds.push(parseLine(l));
+            l = "";
+        }
+    }
+    return ds;
+}
+
+// parse line for values
+function parseLine(l) {
+    let d = [];let v = "";
+    for(let i = 0; i < l.length; i++) {
+        if(l[i] != ",") {
+            v += l[i];
+        } else {
+            d.push(parseFloat(v));
+            v = "";
+        }
+    }
+    return d;
+}
+
+// calculate 3d position with azimuth
+function calcXYZ(data) {
+    let xyz = [];
+    let x = [0];
+    let y = [0];
+    // loop from 2nd in list
+    for(let i = 1; i < data.length; i++) {
+        // distance between points
+        let distance = data[i][1] - data[i-1][1];
+        let azimuthRad = (data[i][0] * Math.PI) / 180;
+        // simple geometry
+        let dx = distance * Math.sin(azimuthRad);
+        let dy = distance * Math.cos(azimuthRad);
+        // need to keep track
+        x.push(x[x.length - 1] + dx);
+        y.push(y[y.length - 1] + dy);
+        // first point normalizes to 0
+        xyz.push([x[i],y[i],(data[i][2] - 176)]);
+    }
+    return xyz;
+}
+
+function calcVectors(xyz) {
+    //return xyz.map(p => new THREE.Vector3(p[0], p[1], p[2]));
+    let vectors = [];
+    for(let i = 0; i < xyz.length; i++) {
+        vectors.push(new THREE.Vector3(xyz[i][0], xyz[i][1], xyz[i][2]));
+    }
+    return vectors;
+}
+
+function getEvenlySpacedPoints(vectors, n) {
+    let totalDistance = 0;
+    const distances = [0];
+
+    for(let i = 1; i < vectors.length; i++) {
+        totalDistance += vectors[i].distanceTo(vectors[i-1]);
+        distances.push(totalDistance);
+    }
+
+    const spacing = totalDistance / (n - 1);
+
+    const points = [];
+    let currDist = 0;
+    let currSeg = 0;
+
+    for(let i = 0; i < n; i++) {
+        while(currSeg < distances.length - 1 &&
+                distances[currSeg + 1] < currDist) {
+            currSeg++;
+        }
+
+        if(currSeg >= vectors.length - 1) {
+            points.push(vectors[vectors.length - 1].clone());
+            currDist += spacing;
+            continue;
+        }
+
+        // calculate interpolation factor within segment
+        const segmentStart = distances[currSeg];
+        const segmentEnd = distances[currSeg + 1];
+        const segmentLength = segmentEnd - segmentStart;
+        const alpha = (currDist - segmentStart) / segmentLength;
+        
+        // interpolate between points
+        const p1 = vectors[currSeg];
+        const p2 = vectors[currSeg + 1];
+        const newPoint = new THREE.Vector3();
+        newPoint.lerpVectors(p1, p2, alpha);
+        points.push(newPoint);
+        
+        currDist += spacing;
+    }
+    return points;
+}
+
+function renderEvenlySpacedPoints(vectors, n = 100) {
+    const points = getEvenlySpacedPoints(vectors, n);
+    let retpoints = [];
+    for(let i = 0; i < points.length; i++) {
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', 
+            new THREE.Float32BufferAttribute([
+                points[i].x,
+                points[i].y,
+                points[i].z
+            ], 3));
+        
+        const material = new THREE.PointsMaterial({ 
+            color: 0x8da9f0,
+            size: 2, 
+        });
+        
+        const point = new THREE.Points(geometry, material);
+        retpoints.push(point);
+        scene.add(point);
+    }
+    return retpoints;
+}
+
+// unused
+function renderPoints(xyz) {
+    let points = [];
+    for(let i = 0; i < xyz.length; i++) {
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', 
+            new THREE.Float32BufferAttribute([
+                xyz[i][0],
+                xyz[i][1],
+                xyz[i][2]
+            ], 3));
+        
+        const material = new THREE.PointsMaterial({ 
+            color: 0xaaaaaa,
+            size: 8, 
+        });
+        
+        const point = new THREE.Points(geometry, material);
+        points.push(point);
+        scene.add(point);
+    }
+    return points;
+}
+
+const colors = [
+    0x8da9f0, // lighter blue
+    0x5983f0,
+    0x5983f0,
+    0x5983f0,
+    0x5983f0,
+    0x3566e6,
+    0x3566e6,
+    0x3566e6,
+    0x3566e6,
+    0x164fde,
+    0x164fde,
+    0x164fde,
+    0x164fde, // middle
+    0x164fde,
+    0x164fde,
+    0x164fde,
+    0x3566e6,
+    0x3566e6,
+    0x3566e6,
+    0x3566e6,
+    0x5983f0,
+    0x5983f0,
+    0x5983f0,
+    0x5983f0,
+    0x8da9f0  // lighter blue
+];
+
+const sizes = [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    3,
+    3,
+    3,
+    3,
+    4,
+    4,
+    4,
+    4,
+    4,
+    3,
+    3,
+    3,
+    3,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+]
+
+// more like flowing water
+function animateMultiFlow(points, n = 4) {
+    // list to keep track of each segment
+    const flowSegments = Array.from({ length: n }, (_, i) => ({
+        pos: Math.floor((points.length / n) * i),
+        offset: 0
+    }));
+    // to get index by looping from front to back
+    const getLoopedIndex = (index) => {
+        return ((index % points.length) + points.length) % points.length;
+    };
+    
+    const updateSegmentColors = (segment) => {
+        // get positional indices for the current flow segment
+        const indices = Array.from({length: colors.length}, (_, i) => {
+            return getLoopedIndex(segment.pos + (i - 8));
+        });
+        // update point based on color
+        indices.forEach((index, i) => {
+            points[index].material.color.setHex(colors[i]);
+            points[index].material.size = sizes[i];
+        });
+        segment.pos = getLoopedIndex(segment.pos - 1);
+    };
+    
+    // update all flow segments
+    const animate = () => {
+        flowSegments.forEach(segment => {
+            updateSegmentColors(segment);
+        });
+    };
+    
+    return setInterval(animate, 38);
+}
+
+
+// render the river and animate it
+function renderRiver() {
+    let data = parseCSV();
+    let xyz = calcXYZ(data);
+    let vectors = calcVectors(xyz);
+    let points = renderEvenlySpacedPoints(vectors, 800);
+    //let terrain = renderTerrain(points);
+    //renderPoints(xyz);
+    //const animationInterval = 
+    animateMultiFlow(points, 24);
+}
+
+// render visual helpers
+async function renderTools() {
+    const size = 1000;
+    const divisions = 10;
+    const gridHelper = new THREE.GridHelper( size, divisions );
+    scene.add( gridHelper );
+    const red = new THREE.Color("rgb(255, 0, 0)");
+    const green = new THREE.Color("rgb(0, 255, 0)");
+    const blue = new THREE.Color("rgb(0, 0, 255)");
+    const axesHelper = new THREE.AxesHelper( 500 );
+    axesHelper.setColors(red, green, blue);
+    scene.add(axesHelper);
+}
+
+// global render
+const w = window.innerWidth;
+const h = window.innerHeight;
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.autoClear = false;
+renderer.setSize(w, h);
+document.body.appendChild(renderer.domElement);
+
+// global cam
+const fov = 75;
+const aspect = w / h;
+const near = 0.1;
+const far = 10000;
+const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+// set cam default
+camera.position.set(50, -200, 75);
+camera.lookAt(0, 0, 0);
+camera.up.set(0, 0, 1);
+
+// global scene
+const scene = new THREE.Scene();
+
+// do this once
+const textureLoader = new THREE.TextureLoader();
+const icogeo = new THREE.IcosahedronGeometry(1, 16);
+
+render();
+
+// global controls
+const controls = new THREE.TrackballControls(camera, renderer.domElement);
+controls.enable = true;
+controls.minDistance = 5;
+controls.maxDistance = 3000;
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.staticMoving = false;
+controls.zoomSpeed = 1.2;
+controls.rotateSpeed = 1.0;
+controls.panSpeed = 0.8;
+
+renderTools();
+renderRiver();
+
+// render the rendering renderer
+function render() {
+    renderer.render(scene, camera)
+}
+
+// animate the scene lel
+function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    render();
+}
+
+window.addEventListener("resize", () => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    controls.update();
+    renderer.setSize(w, h);
+    render();
+});
+
+animate();
